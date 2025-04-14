@@ -629,7 +629,7 @@
      *  [x in keyof HTMLElementEventMap]?: (callback: (event: HTMLElementEventMap[x], currentElement: import("../node/NElement").NElement) => void) => NEvent<x>
      * }}
      */
-    new Proxy({}, {
+    let eventName = new Proxy({}, {
         get: (_target, key) =>
         {
             return (/** @type {(event: Event , currentElement: import("../node/NElement").NElement<any>) => void} */ callback) =>
@@ -717,7 +717,7 @@
      *  [x in keyof HTMLElementTagNameMap]?: NTagName<x>
      * }}
      */
-    new Proxy({}, {
+    let nTagName = new Proxy({}, {
         get: (_target, key) =>
         {
             // @ts-ignore
@@ -1391,6 +1391,180 @@
     let body = getNElement(document.body);
 
     /**
+     * 显示收藏夹页面
+     */
+    function showFavoritePage()
+    {
+        let page = NList.getElement([
+            createNStyleList({
+                position: "fixed",
+                top: "0",
+                left: "0",
+                height: "100%",
+                width: "100%",
+                backgroundColor: "rgb(10, 10, 10)",
+                color: "rgb(245, 245, 245)",
+                fontSize: "1.6em"
+            }),
+
+            [ // 顶栏
+                createNStyleList({
+                    position: "absolute",
+                    top: "0",
+                    left: "0",
+                    height: "60px",
+                    width: "100%",
+                    backgroundColor: "rgb(45, 45, 45)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                }),
+
+                [
+                    "< 返回",
+                    eventName.click(() =>
+                    {
+                        page.remove();
+                    })
+                ],
+
+                [
+                    "收藏夹"
+                ],
+
+                []
+            ],
+
+            [ // 中间内容
+            ]
+        ]);
+
+        body.addChild(page);
+    }
+
+    /**
+     * 显示视频列表页面
+     * @param {string} title
+     */
+    function showListPage(title)
+    {
+        let page = NList.getElement([
+            createNStyleList({
+                position: "fixed",
+                top: "0",
+                left: "0",
+                height: "100%",
+                width: "100%",
+                backgroundColor: "rgb(10, 10, 10)",
+                color: "rgb(245, 245, 245)",
+                fontSize: "1.6em"
+            }),
+
+            [ // 顶栏
+                createNStyleList({
+                    position: "absolute",
+                    top: "0",
+                    left: "0",
+                    height: "60px",
+                    width: "100%",
+                    backgroundColor: "rgb(45, 45, 45)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                }),
+
+                [
+                    "< 返回",
+                    eventName.click(() =>
+                    {
+                        page.remove();
+                    })
+                ],
+
+                [
+                    title
+                ],
+
+                []
+            ],
+
+            [ // 中间内容
+            ]
+        ]);
+
+        body.addChild(page);
+    }
+
+    /**
+     * 显示播放器页面
+     * @param {string} bvid
+     */
+    function showPlayerPage(bvid)
+    {
+        /**
+         * @type {NElement<HTMLVideoElement>}
+         */
+        let video = null;
+        let page = NList.getElement([
+            createNStyleList({
+                position: "fixed",
+                top: "0",
+                left: "0",
+                height: "100%",
+                width: "100%",
+                backgroundColor: "rgb(10, 10, 10)",
+                color: "rgb(245, 245, 245)",
+                fontSize: "1.6em"
+            }),
+
+            [ // 播放器
+                createNStyleList({
+                    position: "absolute",
+                    top: "0",
+                    left: "0",
+                    height: "320px",
+                    width: "100%",
+                    backgroundColor: "rgb(45, 45, 45)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                }),
+
+                [
+                    nTagName.video,
+                    new NAttr("autoplay", "true"),
+                    new NAttr("controls", "true"),
+                    createNStyleList({
+                        width: "100%",
+                        height: "100%"
+                    }),
+                    ele => { video = ele; }
+                ]
+            ],
+
+            [ // 播放器以下内容
+            ]
+        ]);
+
+        body.addChild(page);
+
+
+        (async () =>
+        {
+            try
+            {
+                let info = await (await fetch(`https://api.bilibili.com/x/web-interface/wbi/view?bvid=${bvid}`)).json();
+                let videostream = await (await fetch(`https://api.bilibili.com/x/player/wbi/playurl?bvid=${bvid}&cid=${info.data.cid}&qn=116&fnver=0&fnval=1`)).json();
+                video.element.src = videostream.data.durl[0].url;
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        })();
+    }
+
+    /**
      * 显示主页
      */
     function showHomePage()
@@ -1402,9 +1576,96 @@
                 left: "0",
                 height: "100%",
                 width: "100%",
+                backgroundColor: "rgb(10, 10, 10)",
+                color: "rgb(245, 245, 245)",
+                fontSize: "1.6em"
             }),
 
-            "欢迎回来~"
+            [ // 顶栏
+                createNStyleList({
+                    position: "absolute",
+                    top: "0",
+                    left: "0",
+                    height: "60px",
+                    width: "100%",
+                    backgroundColor: "rgb(45, 45, 45)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }),
+                "这里将会有一个搜索框(TODO)",
+            ],
+
+            [ // 中间内容
+                createNStyleList({
+                    position: "absolute",
+                    top: "60px",
+                    bottom: "60px",
+                    left: "0",
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    gap: "40px"
+                }),
+                [],
+                ...([
+                    {
+                        text: "收藏夹",
+                        cb: () => { showFavoritePage(); }
+                    },
+                    {
+                        text: "稍后再看",
+                        cb: () => { showListPage("稍后再看"); }
+                    },
+                    {
+                        text: "历史记录",
+                        cb: () => { showListPage("历史记录"); }
+                    },
+                    {
+                        text: "推荐视频",
+                        cb: () => { showListPage("推荐视频"); }
+                    },
+                    {
+                        text: "123",
+                        cb: () => { showPlayerPage("BV1GEPcesEih"); }
+                    }
+                ].map(o =>
+                {
+                    return [
+                        createNStyleList({
+                            width: "80%",
+                            height: "80px",
+                            backgroundColor: "rgb(65, 65, 65)",
+                            borderRadius: "8px",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                        }),
+                        o.text,
+                        eventName.click(() =>
+                        {
+                            o.cb();
+                        })
+                    ];
+                }))
+            ],
+
+            [ // 底栏
+                createNStyleList({
+                    position: "absolute",
+                    bottom: "0",
+                    left: "0",
+                    height: "60px",
+                    width: "100%",
+                    backgroundColor: "rgb(45, 45, 45)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }),
+                "由 QwQ0 使用 ❤ 制作"
+            ]
         ]);
 
         body.addChild(page);
@@ -1505,8 +1766,19 @@
                 document.addEventListener("load", () => { resolve(); });
             }));
 
+        body.addChild(NList.getElement([
+            createNStyleList({
+                position: "fixed",
+                top: "0",
+                left: "0",
+                height: "100%",
+                width: "100%",
+                backgroundColor: "rgb(230, 230, 230)",
+                zIndex: "9999999"
+            })
+        ]));
 
-        await delayPromise(1100);
+        await delayPromise(100);
         if (!window["UserStatus"]?.userInfo?.isLogin)
         {
             console.log("未登录");
@@ -1523,7 +1795,7 @@
         else
         {
             console.log("已登录");
-            await delayPromise(1100);
+            await delayPromise(1800);
             body.removeChilds();
             showHomePage();
         }

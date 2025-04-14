@@ -1,4 +1,4 @@
-import { delayPromise, getNElement } from "../lib/qwqframe.js";
+import { delayPromise, getNElement, NList, styles } from "../lib/qwqframe.js";
 import { showHomePage } from "./page/homePage.js";
 import { body } from "./ui/body.js";
 
@@ -98,8 +98,19 @@ async function showLoginPage()
             document.addEventListener("load", () => { resolve(); });
         }));
 
+    body.addChild(NList.getElement([
+        styles({
+            position: "fixed",
+            top: "0",
+            left: "0",
+            height: "100%",
+            width: "100%",
+            backgroundColor: "rgb(230, 230, 230)",
+            zIndex: "9999999"
+        })
+    ]));
 
-    await delayPromise(1100);
+    await delayPromise(100);
     if (!window["UserStatus"]?.userInfo?.isLogin)
     {
         console.log("未登录");
@@ -116,7 +127,7 @@ async function showLoginPage()
     else
     {
         console.log("已登录");
-        await delayPromise(1100);
+        await delayPromise(1800);
         body.removeChilds();
         showHomePage();
     }
