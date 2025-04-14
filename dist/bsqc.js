@@ -1426,10 +1426,14 @@
         });
     }
 
-    window["showLoginPage"] = showLoginPage;
 
     (async () =>
     {
+        if (window["bsqcIjFlag"])
+            return;
+
+        window["bsqcIjFlag"] = {};
+
         // @ts-ignore
         navigator.sendBeacon = (a, b) => { return true; };
 
