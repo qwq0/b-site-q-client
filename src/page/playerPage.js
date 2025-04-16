@@ -11,6 +11,10 @@ export function showPlayerPage(bvid)
      * @type {NElement<HTMLVideoElement>}
      */
     let video = null;
+    /**
+     * @type {NElement<HTMLAudioElement>}
+     */
+    let audio = null;
     let page = NList.getElement([
         styles({
             position: "fixed",
@@ -49,6 +53,27 @@ export function showPlayerPage(bvid)
         ],
 
         [ // 播放器以下内容
+            styles({
+                position: "absolute",
+                left: "0",
+                width: "100%",
+                top: "320px",
+                bottom: "0px",
+                backgroundColor: "rgb(45, 45, 45)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+            }),
+            [
+                nTagName.audio,
+                new NAttr("autoplay", "false"),
+                new NAttr("controls", "true"),
+                styles({
+                    width: "100%",
+                    height: "100%"
+                }),
+                ele => { audio = ele; }
+            ]
         ]
     ]);
 
@@ -62,6 +87,7 @@ export function showPlayerPage(bvid)
             let info = await (await fetch(`https://api.bilibili.com/x/web-interface/wbi/view?bvid=${bvid}`)).json();
             let videostream = await (await fetch(`https://api.bilibili.com/x/player/wbi/playurl?bvid=${bvid}&cid=${info.data.cid}&qn=116&fnver=0&fnval=1`)).json();
             video.element.src = videostream.data.durl[0].url;
+            audio.element.src = videostream.data.durl[0].url;
         }
         catch (err)
         {
