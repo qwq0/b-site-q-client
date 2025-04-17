@@ -73,6 +73,21 @@ export function showPlayerPage(bvid)
                         }
                     }
                 })
+            ],
+
+            [
+                styles({
+                    position: "absolute",
+                    top: "0",
+                    left: "0",
+                    height: "45px",
+                    width: "45px",
+                    backgroundColor: "rgba(70, 70, 70, 0.1)",
+                }),
+                eventName.click(() =>
+                {
+                    page.remove();
+                })
             ]
         ],
 
