@@ -70,6 +70,10 @@ export function showHomePage()
                 {
                     text: "123",
                     cb: () => { showPlayerPage("BV1GEPcesEih"); }
+                },
+                {
+                    text: "打开BV号",
+                    cb: () => { showPlayerPage(prompt("bvid")); }
                 }
             ].map(o =>
             {

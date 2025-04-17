@@ -1505,10 +1505,18 @@
          * @type {NElement<HTMLVideoElement>}
          */
         let video = null;
+
         /**
-         * @type {NElement<HTMLAudioElement>}
+         * @type {Array<{
+         *  start: number,
+         *  end: number,
+         *  text: string
+         * }>}
          */
-        let audio = null;
+        let skipSeg = [];
+
+        let lastUpdateTime = 0;
+
         let page = NList.getElement([
             createNStyleList({
                 position: "fixed",
@@ -1528,7 +1536,7 @@
                     left: "0",
                     height: "320px",
                     width: "100%",
-                    backgroundColor: "rgb(45, 45, 45)",
+                    backgroundColor: "rgb(10, 10, 10)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between"
@@ -1542,7 +1550,23 @@
                         width: "100%",
                         height: "100%"
                     }),
-                    ele => { video = ele; }
+                    ele => { video = ele; },
+                    eventName.timeupdate(o =>
+                    {
+                        if (Math.abs(video.node.currentTime - lastUpdateTime) > 0.2)
+                        {
+                            let currentTime = video.node.currentTime;
+                            lastUpdateTime = currentTime;
+                            for (let o of skipSeg)
+                            {
+                                if (o.start + 0.5 < currentTime && currentTime < o.end - 1)
+                                {
+                                    video.node.currentTime = o.end - 0.5;
+                                    break;
+                                }
+                            }
+                        }
+                    })
                 ]
             ],
 
@@ -1558,16 +1582,6 @@
                     alignItems: "center",
                     justifyContent: "space-between"
                 }),
-                [
-                    nTagName.audio,
-                    new NAttr("autoplay", "false"),
-                    new NAttr("controls", "true"),
-                    createNStyleList({
-                        width: "100%",
-                        height: "100%"
-                    }),
-                    ele => { audio = ele; }
-                ]
             ]
         ]);
 
@@ -1579,9 +1593,39 @@
             try
             {
                 let info = await (await fetch(`https://api.bilibili.com/x/web-interface/wbi/view?bvid=${bvid}`)).json();
-                let videostream = await (await fetch(`https://api.bilibili.com/x/player/wbi/playurl?bvid=${bvid}&cid=${info.data.cid}&qn=116&fnver=0&fnval=1`)).json();
+                let cid = info.data.cid;
+                let videostream = await (await fetch(`https://api.bilibili.com/x/player/wbi/playurl?bvid=${bvid}&cid=${cid}&qn=116&fnver=0&fnval=1`)).json();
                 video.element.src = videostream.data.durl[0].url;
-                audio.element.src = videostream.data.durl[0].url;
+
+
+
+                try
+                {
+                    /**
+                     * @type {Array<Object>}
+                     */
+                    let segmentInfo = await (await fetch(`https://bsbsb.top/api/skipSegments?videoID=${bvid}`)).json();
+                    segmentInfo.forEach(o =>
+                    {
+                        if (o.cid == cid)
+                        {
+                            if (o.category == "sponsor")
+                            {
+                                skipSeg.push({
+                                    start: o.segment[0],
+                                    end: o.segment[1],
+                                    text: "赞助广告"
+                                });
+                            }
+                        }
+                    });
+                    console.log("获取到信息");
+                }
+                catch (err)
+                {
+                    console.error(err);
+                    console.log("未获取到信息");
+                }
             }
             catch (err)
             {
@@ -1656,6 +1700,10 @@
                     {
                         text: "123",
                         cb: () => { showPlayerPage("BV1GEPcesEih"); }
+                    },
+                    {
+                        text: "打开BV号",
+                        cb: () => { showPlayerPage(prompt("bvid")); }
                     }
                 ].map(o =>
                 {
