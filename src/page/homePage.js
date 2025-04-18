@@ -57,19 +57,79 @@ export function showHomePage()
                 },
                 {
                     text: "稍后再看",
-                    cb: () => { showListPage("稍后再看"); }
+                    cb: () =>
+                    {
+                        showListPage("稍后再看", async (pageIndex) =>
+                        {
+                            try
+                            {
+                                if (pageIndex >= 1)
+                                    return [];
+                                let info = await (await fetch(
+                                    "https://api.bilibili.com/x/v2/history/toview",
+                                    {
+                                        credentials: "include"
+                                    }
+                                )).json();
+                                /** @type {Array<Object>} */
+                                let list = info.data.list;
+                                return list.map(o => ({
+                                    title: o.title,
+                                    bvid: o.bvid,
+                                    upperName: o.owner.name,
+                                    cover: o.pic
+                                }));
+                            }
+                            catch (err)
+                            {
+                                console.log(err);
+                                return [];
+                            }
+                        });
+                    }
                 },
                 {
                     text: "历史记录",
-                    cb: () => { showListPage("历史记录"); }
+                    cb: () =>
+                    {
+                        showListPage("历史记录", async (pageIndex) =>
+                        {
+                            try
+                            {
+                                if (pageIndex >= 1)
+                                    return [];
+                                let info = await (await fetch(
+                                    "https://api.bilibili.com/x/web-interface/history/cursor?view_at=0&type=archive&ps=20",
+                                    {
+                                        credentials: "include"
+                                    }
+                                )).json();
+                                /** @type {Array<Object>} */
+                                let list = info.data.list;
+                                return list.map(o => ({
+                                    title: o.title,
+                                    bvid: o.bvid,
+                                    upperName: o.author_name,
+                                    cover: o.cover
+                                }));
+                            }
+                            catch (err)
+                            {
+                                console.log(err);
+                                return [];
+                            }
+                        });
+                    }
                 },
                 {
                     text: "推荐视频",
-                    cb: () => { showListPage("推荐视频"); }
-                },
-                {
-                    text: "123",
-                    cb: () => { showPlayerPage("BV1GEPcesEih"); }
+                    cb: () =>
+                    {
+                        showListPage("推荐视频", async (pageIndex) =>
+                        {
+                            return [];
+                        });
+                    }
                 },
                 {
                     text: "打开BV号",

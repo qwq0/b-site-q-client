@@ -1,4 +1,4 @@
-import { eventName, NAttr, NElement, NList, nTagName, NTagName, styles } from "../../lib/qwqframe.js";
+import { bindValue, createHookObj, eventName, NAttr, NElement, NList, nTagName, NTagName, styles } from "../../lib/qwqframe.js";
 import { body } from "../ui/body.js";
 
 /**
@@ -22,6 +22,18 @@ export function showPlayerPage(bvid)
     let skipSeg = [];
 
     let lastUpdateTime = 0;
+
+
+    let dataInfo = createHookObj({
+        viewCount: 0,
+        likesCount: 0,
+        coinsCount: 0,
+        favoriteCount: 0,
+        title: "",
+        describe: "",
+        upperName: "",
+        skipCount: 0
+    });
 
     let page = NList.getElement([
         styles({
@@ -75,7 +87,7 @@ export function showPlayerPage(bvid)
                 })
             ],
 
-            [
+            [ // 返回按钮
                 styles({
                     position: "absolute",
                     top: "0",
@@ -99,10 +111,73 @@ export function showPlayerPage(bvid)
                 top: "320px",
                 bottom: "0px",
                 backgroundColor: "rgb(45, 45, 45)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between"
             }),
+
+            [ // 视频信息
+                styles({
+                    margin: "5px"
+                }),
+                [
+                    bindValue(dataInfo, "upperName"),
+                    styles({
+                        fontSize: "0.7em",
+                        color: "rgb(190, 190, 190)"
+                    }),
+                ],
+                [
+                    bindValue(dataInfo, "title")
+                ],
+                [
+                    bindValue(dataInfo, "describe"),
+                    styles({
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "normal",
+                        width: "100%",
+                        height: "40px",
+                        minHeight: "40px",
+                        fontSize: "0.8em"
+                    }),
+
+                    ele =>
+                    {
+                        let expandedDescription = false;
+                        ele.addEventListener("click", o =>
+                        {
+                            if (expandedDescription)
+                            {
+                                expandedDescription = false;
+                                ele.setStyles({
+                                    height: "40px",
+                                    whiteSpace: "normal"
+                                });
+                            }
+                            else
+                            {
+                                expandedDescription = true;
+                                ele.setStyles({
+                                    height: "fit-content",
+                                    whiteSpace: "pre-wrap"
+                                });
+                            }
+                        });
+                    }
+                ],
+                [
+                    ` 播放量: `,
+                    bindValue(dataInfo, "viewCount", o => String(o)),
+                    ` 点赞: `,
+                    bindValue(dataInfo, "likesCount", o => String(o)),
+                    ` 硬币: `,
+                    bindValue(dataInfo, "coinsCount", o => String(o)),
+                    ` 收藏: `,
+                    bindValue(dataInfo, "favoriteCount", o => String(o)),
+                ],
+                [
+                    ` 跳过片段数: `,
+                    bindValue(dataInfo, "skipCount", o => String(o))
+                ]
+            ]
         ]
     ]);
 
@@ -114,11 +189,18 @@ export function showPlayerPage(bvid)
         try
         {
             let info = await (await fetch(`https://api.bilibili.com/x/web-interface/wbi/view?bvid=${bvid}`)).json();
-            let cid = info.data.cid;
+            let infoData = info.data;
+            let cid = infoData.cid;
             let videostream = await (await fetch(`https://api.bilibili.com/x/player/wbi/playurl?bvid=${bvid}&cid=${cid}&qn=116&fnver=0&fnval=1`)).json();
             video.element.src = videostream.data.durl[0].url;
 
-
+            dataInfo.title = infoData.title;
+            dataInfo.describe = infoData.desc;
+            dataInfo.upperName = infoData.owner.name;
+            dataInfo.viewCount = infoData.stat.view;
+            dataInfo.likesCount = infoData.stat.like;
+            dataInfo.coinsCount = infoData.stat.coin;
+            dataInfo.favoriteCount = infoData.stat.favorite;
 
             try
             {
@@ -140,6 +222,7 @@ export function showPlayerPage(bvid)
                         }
                     }
                 });
+                dataInfo.skipCount = skipSeg.length;
                 console.log("获取到信息");
             }
             catch (err)
